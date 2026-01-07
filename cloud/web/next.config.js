@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  // Use standalone output only for Docker builds
+  ...(process.env.DOCKER_BUILD === 'true' ? { output: 'standalone' } : {}),
   reactStrictMode: true,
   // Allow API calls to different origins in development
   async rewrites() {

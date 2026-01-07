@@ -18,6 +18,9 @@ COPY . .
 ARG NEXT_PUBLIC_API_BASE=http://localhost:8000
 ENV NEXT_PUBLIC_API_BASE=$NEXT_PUBLIC_API_BASE
 
+# Enable standalone output for Docker
+ENV DOCKER_BUILD=true
+
 # Build the application
 RUN npm run build
 
