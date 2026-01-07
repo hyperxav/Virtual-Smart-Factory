@@ -108,7 +108,7 @@ export default function Dashboard() {
     { refreshInterval: 5000 }
   );
 
-  const isConnected = !kpiError && kpis && kpis.total_points > 0;
+  const isConnected = Boolean(!kpiError && kpis && kpis.total_points > 0);
 
   // Format chart data
   const chartData =
