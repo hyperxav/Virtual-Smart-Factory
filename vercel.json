@@ -1,6 +1,0 @@
-{
-  "framework": "nextjs",
-  "installCommand": "cd cloud/web && npm install",
-  "buildCommand": "cd cloud/web && npm run build",
-  "outputDirectory": "cloud/web/.next"
-}
