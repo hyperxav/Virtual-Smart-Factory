@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: vsf-mqtt
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    restart: unless-stopped
+    networks:
+      - edge-net
+
+  edge-agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    container_name: vsf-edge-agent
+    environment:
+      - MQTT_HOST=mqtt
+      - MQTT_PORT=1883
+      - CLOUD_API_URL=${CLOUD_API_URL:-http://host.docker.internal:8000}
+      - TENANT_ID=${TENANT_ID:-acme}
+      - PLANT_ID=${PLANT_ID:-plant-01}
+      - TELEMETRY_INTERVAL_MS=${TELEMETRY_INTERVAL_MS:-2000}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - agent_buffer:/app/buffer
+    depends_on:
+      - mqtt
+    restart: unless-stopped
+    networks:
+      - edge-net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  mosquitto_data:
+  mosquitto_log:
+  agent_buffer:
+
+networks:
+  edge-net:
+    driver: bridge

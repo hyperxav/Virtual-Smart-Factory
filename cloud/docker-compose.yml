@@ -1,0 +1,62 @@
+version: "3.8"
+
+services:
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    container_name: vsf-timescaledb
+    environment:
+      - POSTGRES_USER=vsf
+      - POSTGRES_PASSWORD=vsf_secret_2024
+      - POSTGRES_DB=smartfactory
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vsf -d smartfactory"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cloud-net
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: vsf-api
+    environment:
+      - DATABASE_URL=postgresql://vsf:vsf_secret_2024@timescaledb:5432/smartfactory
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+    ports:
+      - "8000:8000"
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - cloud-net
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: vsf-web
+    environment:
+      - NEXT_PUBLIC_API_BASE=${NEXT_PUBLIC_API_BASE:-http://localhost:8000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - cloud-net
+
+volumes:
+  timescale_data:
+
+networks:
+  cloud-net:
+    driver: bridge
